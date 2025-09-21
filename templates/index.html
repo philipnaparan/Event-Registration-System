@@ -1,0 +1,1037 @@
+{% extends '_base.html' %}
+{% load static %}
+
+{% block top_script  %}
+
+<script src="{% static 'js/' %}cookie.js"></script>
+<script src="{% static 'vendors/' %}vue/vue.js"></script>
+<script src="{% static 'vendors/' %}utils/axios.min.js"></script>
+<script src="{% static 'vendors/' %}utils/moment.js"></script>
+<script src="{% static 'vendors/' %}utils/validate.min.js"></script>
+<script src="{% static 'vendors/' %}utils/sha1.min.js"></script>
+<script src="{% static 'vendors/' %}utils/modal.min.js"></script>
+
+
+{% endblock  %}
+
+
+
+
+{% block header_content  %}
+<h1 class="display-2"><i class="fa fa-calendar-check" aria-hidden="true"></i> {{ page_title }}</1>
+{% endblock  %}
+
+{% block main_content  %}
+
+
+<!-- Search block -->
+<div class="row mb-4" style="margin-top: 50px;">
+    <div class="col-md-4">
+        <!-- Text filter -->
+        <div class="input-group">
+            <input type="text" class="form-control" placeholder="Search an Event..." v-model="filterText" @input="handleTextFilter" >
+            <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
+        </div>
+    </div>
+    <div class="col-md-5">
+        <!-- Date filter -->
+        <div class="input-group">
+            <span class="input-group-text">Events From</span>
+            <input type="date" class="form-control" v-model="filterDateFrom" @change="handleDateFilter" >
+            <span class="input-group-text">To</span>
+            <input type="date" class="form-control" v-model="filterDateTo" @change="handleDateFilter">
+        </div>
+    </div>
+    <div class="col-md-3">
+        <!-- Sort by -->
+        <div class="input-group">
+            <span class="input-group-text">Sort by:</span>
+            <select class="form-select" v-model="sortBy" @change="getData">
+                <option value="relevant">Relevant result</option>
+                <option value="date_time">Date Asc (A-Z)</option>
+                <option value="-date_time">Date Desc (Z-A)</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+
+<div class="row">
+
+    <!-- User profile block -->
+    <div class="col col-md-2 col-sm-12">
+        <div class="card">
+            <div class="card-header fw-bold">
+              User Profile
+            </div>
+            <div v-if="isLoggedIn" class="card-body">
+                <img :src="participantPhoto" class="rounded border mx-auto d-block"  style="width: 100%" ></img>
+                <span class="fw-bold">First Name:</span><br />
+                <span>[[ participantFirstName ]]</span><br />
+                <span class="fw-bold">Last Name:</span><br />
+                <span>[[ participantLastName ]]</span><br />
+                <span class="fw-bold"><i class="fa-solid fa-envelope"></i> E-mail:</span><br />
+                <span>[[ participantEmail ]]</span><br />
+                <br />
+                <a class="d-inline-block mb-4" href="#" @click="showEditProfile" ><i class="fa fa-edit" aria-hidden="true"></i> Edit Profile</a>
+                <br />
+                <button class="btn btn-secondary" @click="doLogout"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+            </div>
+            <div v-else class="card-body">
+                <p>Please log in to join some of event.</p>
+                <button class="btn btn-primary" @click="showLogin"><i class="fa-solid fa-right-to-bracket"></i> Login</button><br />
+                or <br />
+                <button class="btn btn-secondary" @click="showSignup"><i class="fa-solid fa-user-plus"></i> Signup</button>
+            </div>
+        </div>
+
+    </div>
+
+
+    <div class="col col-md-10 col-sm-12">
+
+        <div class="row">
+            
+            <div class="col col-12">
+                <h5 class="fw-light">Total Records: [[ totalRecords ]]  <span style="font-size: 0.80em ; margin-left: 30px;">Showing: [[ (currentPage * perPage) - (perPage - 1) ]] - [[ (currentPage * perPage) ]]</span><span style="font-size: 0.80em ; margin-left: 30px;">Per Page Limit: </span><input type="number" class="d-inline p-2 border rounded " style="width:60px; font-size: 0.80em " v-model="perPage" @change="handlePaginationUpdate" ></h5>
+            </div>
+
+            <!-- Event list block -->
+            <div class="col col-12">
+                <div v-for="event in eventsData" class="card event-class d-inline-block m-2" style="width: 18em;">
+                    <div class="card-body">
+                        <h4 class="card-title"><a href="#" @click="showEvent($event)" :event-id="event.id" :title=event.name>[[ truncateText(event.name, 15) ]]</a></h4>
+                        <h6 class="card-title text-muted">[[ event.type ]]</h6>
+                        <p class="card-text">
+                            <span><i class="fa-solid fa-location-dot"></i> Location: [[ event.location ]]</span><br />
+                            <span><i class="fa fa-calendar" aria-hidden="true"></i> Date: [[ event.date_time ]]</span><br />
+                        </p>
+
+
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Event list Nav block -->
+            <div class="col col-12 mt-4">
+                <nav>
+                    <ul class="pagination justify-content-center bg-light text-dark rounded p-2">
+                        <li class="page-item" >
+                            <button class="btn btn-primary" @click="gotoPrevPage" :class="{ 'disabled': (currentPage - 1) <= 0  }"><i class="fa-solid fa-angle-left"></i> Previous</button>
+                        </li>
+                        <li class="page-item  pt-1"><span style="margin-left: 10px; margin-right:10px;">Page [[ currentPage ]] of [[ totalPage ]]</span></li>
+                        <li class="page-item">
+                            <button class="btn btn-primary" @click="gotoNextPage" :class="{ 'disabled': (currentPage + 1) > totalPage  }">Next <i class="fa-solid fa-angle-right"></i></button>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+
+    </div>
+
+</div>
+
+<!-- Login Modal -->
+<div class="modal fade" id="mdl-login" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Member Login</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="frm-login" @submit.prevent="handleLoginForm">
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="fld-login-email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="fld-login-email" name="fld-login-email" v-model="fldLoginEmail" placeholder="Enter your email" maxlength="50" required>
+                </div>
+                <div class="mb-3">
+                    <label for="fld-login-password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="fld-login-password" name="fld-login-password" v-model="fldLoginPassword" placeholder="Enter your password" maxlength="30" required>
+                </div>
+                <br />
+                <span float-left>Not a memeber? <a href="#" @click="showSignup" >Click here to register.</a></span>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @click="hideLogin">Cancel</button>
+                <button type="submit" class="btn btn-primary">Login</button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Signup Modal -->
+<div class="modal fade" id="mdl-signup" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">[[ membershipFormTitle ]]</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="frm-signup" @submit.prevent="handleSignUpForm">
+            <div class="modal-body">
+                <!-- Your registration form goes here -->
+                    
+                    
+                    <div class="mb-3">
+                        
+                        <img :src="displayChoosenPhoto" class="rounded border mx-auto d-block mb-2 mt-2 bg-light" style="width:100%; min-height:80px;"  ></img>
+
+                        <label for="fphoto" class="form-label"><span v-if="isAddParticipant">Photo</span><span v-else>Replace Photo</span></label>
+                        <input id="fphoto" @change="handlePhotoUpload" class="form-control" type="file" accept=".jpg, .jpeg, .png">
+                    </div>
+                    <div class="mb-3">
+                        <label for="fname" class="form-label">First Name</label>
+                        <input type="text" class="form-control" id="fname" v-model="fldParticipantFirstName" placeholder="Enter your First Name" maxlength="50" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="lname" class="form-label">Last Name</label>
+                        <input type="text" class="form-control" id="lname" v-model="fldParticipantLastName" placeholder="Enter your Last Name" maxlength="50" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Phone No</label>
+                        <input type="text" class="form-control" id="phone" v-model="fldParticipantPhone" placeholder="Enter your Phone No" maxlength="20" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" v-model="fldParticipantEmail" placeholder="Enter your email" maxlength="50" autocomplete="off" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label"><span v-if="isAddParticipant">Password</span><span v-else>Old Password</span></label>
+                        <input type="password" class="form-control" id="password" v-model="fldParticipantPassword" placeholder="Enter your password" maxlength="20" autocomplete="off" :required="isAddParticipant">
+                    </div>
+                    <div class="mb-3">
+                        <label for="rpassword" class="form-label"><span v-if="isAddParticipant">Re-Type Password</span><span v-else>New Password</span></label>
+                        <input type="password" class="form-control" id="rpassword" v-model="fldParticipantRePassword" placeholder="Enter your again your password" maxlength="20" autocomplete="off"  :required="isAddParticipant">
+                    </div>
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @click="hideSignup">Cancel</button>
+                <button type="submit" class="btn btn-primary"><span v-if="isAddParticipant">Join</span><span v-else>Save</span></button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<!-- Event Details Modal -->
+<div class="modal fade" id="mdl-event" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Event Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                
+                
+                <span v-if="selEventId > 0 && selEventAvailable == 0" class="position-absolute ttop-0 end-0 badge rounded-pill bg-danger" style="font-size: 0.5em; letter-spacing: .2em;">FULL</span>
+
+                
+                <h4 class="card-title">[[ selEventName ]]</h4>
+                <h6 class="card-title text-muted">[[ selEventType ]]</h6>
+
+                <img :src="selEventPhoto" class="rounded border mx-auto d-block mb-2 mt-2 bg-light" style="width:100%; min-height:80px;"  ></img>
+
+
+                <p>
+                    <span class="fw-bold">Details:</span><br />
+                    [[ selEventDescription ]]
+                </p>
+                
+                <p class="card-text">
+                    <span><i class="fa-solid fa-location-dot"></i> Location: [[ selEventLocation ]]</span><br />
+                    <span><i class="fa fa-calendar" aria-hidden="true"></i> Date: [[ selEventDateTime ]]</span><br />
+                </p>
+
+                <p>
+                    <span><i class="fa-solid fa-user-group"></i> Available Seat:</span> <span class="badge bg-secondary" style="font-size:1em" :class="{ 'bg-info text-dark': selEventAvailable }" >[[ selEventAvailable ]]</span>
+                    <span style="margin-left: 20px;"> Max: [[ selEventMax ]]</span>
+                </p>
+
+                <br />
+                <span v-if="selEventIsRegistered" class="text-success p-1 fw-bold"><i class="fa fa-check-circle" aria-hidden="true"></i> Already Registered</span>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @click="hideEvent">Close</button>
+                
+                <div v-if="!selEventIsRegistered">
+                    <button v-if="selEventAvailable > 0" class="btn btn-primary" @click="regEvent"><i class="fa-regular fa-hand-point-right"></i> Register</button>
+                    <button v-else class="btn btn-outline-secondary" disable><i class="fa-regular fa-hand-point-right"></i> Register</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock  %}
+
+
+{% block footer_content  %}
+<div class="container">
+    <div class="row border-top text-center pt-4">
+        <p>This is for educational purpose only.</p>
+        <p><a href="{% url 'cpanel:home' %}" target="_blank"><i class="fa-solid fa-screwdriver-wrench"></i> Admin Panel</a></p>
+    </div>
+</div>
+{% endblock  %}
+
+
+
+{% block bottom_script  %}
+
+<script src="{% static 'vendors/' %}bootstrap/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    
+    const app = Vue.createApp({
+        delimiters: ['[[',']]'],
+        data(){
+            return {
+                isLoggedIn: false,
+                isAddParticipant: false,
+                eventsData: [],
+                totalRecords: 0,
+                totalPage: 1,
+                currentPage: 1,
+                perPage: 5,
+                filterText: '',
+                filterDateFrom: '',
+                filterDateTo: '',
+                sortBy: 'relevant',
+
+                fldLoginEmail: '',
+                fldLoginPassword: '',
+
+                participantFirstName: '',
+                participantLastName: '',
+                participantPhone: '',
+                participantEmail: '',
+                participantPhoto: '',
+
+                fldParticipantFirstName: '',
+                fldParticipantLastName: '',
+                fldParticipantPhone: '',
+                fldParticipantEmail: '',
+                fldParticipantPassword: '',
+                fldParticipantRePassword: '',
+                fldParticipantPhoto: '',
+
+                selEventId: 0,
+                selEventName: '',
+                selEventDateTime: '',
+                selEventLocation: '',
+                selEventDescription: '',
+                selEventType: '',
+                selEventMax: 0,
+                selEventAvailable: 0,
+                selEventIsRegistered: false,
+                selEventPhoto: '',
+
+                mdlLogin: null,
+                mdlSignup: null,
+                mdlReg: null,
+                mdlEvent: null,
+
+                delayDataLoading: null,
+                session_token:'',
+            }
+        },
+        methods: {
+            truncateText(str, maxLength) {
+                if (str.length > maxLength) {
+                    return str.substring(0, maxLength) + '...';
+                }
+                return str;
+            },
+            updateQty(){
+                this.qty++;
+                this.isStockOk = !this.isStockOk;
+            },
+            gotoNextPage(){
+                this.currentPage++;
+                this.getData();
+            },
+            gotoPrevPage(){
+                this.currentPage--;
+                this.getData();
+            },
+            handleTextFilter(){
+                const _this = this;
+
+                clearTimeout(this.delayDataLoading);
+                this.delayDataLoading = setTimeout(() => {
+                    _this.getData();
+                }, 1000);
+
+            },
+            handleDateFilter(){
+                const _this = this;
+
+                if( (_this.filterDateFrom && !_this.filterDateTo) ||
+                    (!_this.filterDateFrom && _this.filterDateTo) ) _this.filterDateTo = _this.filterDateFrom;
+
+                clearTimeout(this.delayDataLoading);
+                this.delayDataLoading = setTimeout(() => {
+                    _this.getData();
+                }, 1000);  
+
+            },
+            showLogin(){
+                if(this.mdlEvent) this.hideEvent();
+
+                this.mdlLogin = new bootstrap.Modal(document.getElementById('mdl-login'));
+                this.mdlLogin.show();
+            },
+            hideLogin(){
+                if(this.mdlLogin){
+                    this.mdlLogin.hide();
+                    this.mdlLogin = null;
+
+                    this.fldLoginEmail = '';
+                    this.fldLoginPassword = '';
+                }
+            },
+            handleLoginForm(){
+                let form = document.getElementById("frm-login");
+
+                if (form.reportValidity()) {
+                    this.doLogin();
+                }
+
+            },
+            doLogin(token=''){
+                const _this = this;                
+
+                let formData = new FormData();
+                
+                if(token){
+
+                    formData.append('token', token);
+
+                } else {
+
+                    const constraints = {
+                        useremail: {
+                            email: true,
+                        },
+                        password: {
+                            length: {
+                                minimum: 3,
+                                maximum: 30,
+                              }
+                        },
+                    };
+                    
+                    let v = validate({useremail: _this.fldLoginEmail}, constraints);
+                    if(v){
+                        new Modal.alert( "Invalid email" ).show();
+                        return;
+                    }
+
+                    v = validate({password: _this.fldLoginPassword}, constraints);
+                    if(v){
+                        new Modal.alert( "Invalid password." ).show();
+                        return;
+                    }                    
+
+                    formData.append('email', _this.fldLoginEmail);
+                    formData.append('password', sha1(_this.fldLoginPassword));
+                }
+
+                axios({
+                    method: 'post',
+                    url: `{% url 'api:participant-login' %}`,
+                    data: formData,
+                    headers: {"Content-Type":"multipart/form-data"},
+                })
+                .then(function (response) {
+
+                    const record = response.data.result.record;
+
+                    console.log(response);
+
+                    _this.participantFirstName = record.first_name;
+                    _this.participantLastName = record.last_name;
+                    _this.participantPhone = record.phone_no;
+                    _this.participantEmail = record.email;
+                    _this.participantPhoto = record.profile_picture == '' ? '{% static 'img/no-photo.jpg' %}' : record.profile_picture;
+
+                    _this.isLoggedIn = true;
+                    _this.session_token = response.data.result.token;
+
+
+                    setCookie('session_token', _this.session_token, 24);
+
+                })
+                .catch(function (error) {
+                    
+                    console.log(error);
+                    if(!token) new Modal.alert( "Login Failed: " + error.response.data.result.msg ).show();
+
+                    _this.session_token = '';
+                    deleteCookie('session_token');
+                })
+                .finally(function () {
+                    if(!token) _this.hideLogin();
+                    _this.getData();
+                });
+
+                
+            },
+            doLogout(){
+                const _this = this;
+
+                let proceed = new Modal({
+                    title: 'Confirmation',
+                    content: 'Proceed to logout?',
+                    headerClose: '',
+                });
+                
+                proceed.show().once('dismiss', function(modal, ev, button) {
+                    if (button && button.value) {
+                        
+                        let formData = new FormData();
+
+                        formData.append('token', _this.session_token);
+                        
+                        axios({
+                            method: 'post',
+                            url: `{% url 'api:participant-logout' %}`,
+                            data: formData,
+                            headers: {"Content-Type":"multipart/form-data"},
+                        })
+                        .then(function (response) {
+        
+                            console.log(response);
+        
+                            _this.participantFirstName = '';
+                            _this.participantLastName = '';
+                            _this.participantPhoto = '';
+
+                            _this.isLoggedIn = false;
+                            _this.session_token = '';
+
+                            deleteCookie('session_token');
+
+                            _this.getData();
+
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                            new Modal.alert( "Error: " + error.response.data.result.msg ).show();
+                        })
+                        .finally(function () {
+                            //
+                        });
+
+                    }
+                });
+
+            },
+            showSignup(){
+                if(this.mdlLogin) this.hideLogin();
+
+                this.isAddParticipant = true;
+                this.mdlSignup = new bootstrap.Modal(document.getElementById('mdl-signup'));
+                this.mdlSignup.show();
+            },
+            hideSignup(){
+                if(this.mdlSignup){
+                    this.mdlSignup.hide();
+                    this.mdlSignup = null;
+                    this.isAddParticipant = false;
+
+                    this.fldParticipantFirstName = '';
+                    this.fldParticipantLastName = '';
+                    this.fldParticipantPhone = '';
+                    this.fldParticipantEmail = '';
+                    this.fldParticipantPassword = '';
+                    this.fldParticipantRePassword = '';
+                    this.fldParticipantPhoto = '';
+                }
+            },
+            handleSignUpForm(){
+                let form = document.getElementById("frm-signup");
+
+                if (form.reportValidity()) {
+                    if (this.isAddParticipant){
+                        this.doSignup();
+                    }else{
+                        this.doProfileUpdate();
+                    }
+                }
+
+            },
+            doSignup(){
+
+                _this = this;
+
+                const constraints = {
+                    useremail: {
+                        email: true,
+                    },
+                    password: {
+                        length: {
+                            minimum: 3,
+                            maximum: 30,
+                          }
+                    },
+                    confirmPassword: {
+                        equality: "password"
+                      }
+                };
+                
+                let v = validate({useremail: _this.fldParticipantEmail}, constraints);
+                if(v){
+                    new Modal.alert( "Invalid email." ).show();
+                    return;
+                }
+
+                v = validate({password: _this.fldParticipantPassword}, constraints);
+                if(v){
+                    new Modal.alert( "Password should have minimum of 3 character." ).show();
+                    return;
+                }          
+                
+                
+                v = validate({password: _this.fldParticipantPassword, confirmPassword: _this.fldParticipantRePassword}, constraints)
+                if(v){
+                    new Modal.alert( "Re-type the password correctly." ).show();
+                    return;
+                }    
+                
+
+                let formData = new FormData();
+                
+                formData.append('fname', _this.fldParticipantFirstName);
+                formData.append('lname', _this.fldParticipantLastName);
+                formData.append('phone', _this.fldParticipantPhone);
+                formData.append('email', _this.fldParticipantEmail);
+                formData.append('password', _this.fldParticipantPassword);
+
+                if(_this.fldParticipantPhoto) formData.append('photo', _this.fldParticipantPhoto);
+                
+                axios({
+                    method: 'post',
+                    url: `{% url 'api:participant-add' %}`,
+                    data: formData,
+                    headers: {"Content-Type":"multipart/form-data"},
+                })
+                .then(function (response) {
+
+                    console.log(response);
+
+                    _this.session_token = response.data.result.token;
+                    _this.doLogin(_this.session_token);
+                })
+                .catch(function (error) {
+                    console.log(error);
+                    new Modal.alert( "Error: " + error.response.data.result.msg ).show();
+                })
+                .finally(function () {
+
+                    _this.hideSignup();
+
+
+                });
+
+            },
+            showEditProfile(){
+
+                this.fldParticipantFirstName = this.participantFirstName;
+                this.fldParticipantLastName = this.participantLastName;
+                this.fldParticipantPhone = this.participantPhone 
+                this.fldParticipantEmail = this.participantEmail
+
+                this.isAddParticipant = false;
+
+                this.mdlSignup = new bootstrap.Modal(document.getElementById('mdl-signup'));
+                this.mdlSignup.show();
+            },
+            doProfileUpdate(){
+
+                _this = this;
+
+                const constraints = {
+                    useremail: {
+                        email: true,
+                    },
+                    password: {
+                        length: {
+                            minimum: 3,
+                            maximum: 30,
+                          }
+                    },
+                    confirmPassword: {
+                        equality: "password"
+                      }
+                };
+                
+                let v = validate({useremail: _this.fldParticipantEmail}, constraints);
+                if(v){
+                    new Modal.alert( "Invalid email." ).show();
+                    return;
+                }
+
+
+                if(_this.fldParticipantPassword || _this.fldParticipantRePassword){
+                    
+                    v = validate({password: _this.fldParticipantPassword}, constraints);
+                    if(v){
+                        new Modal.alert( "Old Password should have minimum of 3 character." ).show();
+                        return;
+                    }
+                    
+                    
+                    v = validate({password: _this.fldParticipantRePassword}, constraints);
+                    if(v){
+                        new Modal.alert( "New Password should have minimum of 3 character." ).show();
+                        return;
+                    }
+
+                }
+                
+
+                let formData = new FormData();
+                
+                formData.append('fname', _this.fldParticipantFirstName);
+                formData.append('lname', _this.fldParticipantLastName);
+                formData.append('phone', _this.fldParticipantPhone);
+                formData.append('email', _this.fldParticipantEmail);
+                formData.append('password', _this.fldParticipantPassword);
+                formData.append('new_password', _this.fldParticipantRePassword);
+                formData.append('mode', 'update');
+                formData.append('token', _this.session_token);
+
+                if(_this.fldParticipantPhoto) formData.append('photo', _this.fldParticipantPhoto);
+                
+                axios({
+                    method: 'post',
+                    url: `{% url 'api:participant-add' %}`,
+                    data: formData,
+                    headers: {"Content-Type":"multipart/form-data"},
+                })
+                .then(function (response) {
+
+                    const record = response.data.result.record;
+
+                    console.log(response);
+
+                    _this.participantFirstName = record.first_name;
+                    _this.participantLastName = record.last_name;
+                    _this.participantPhone = record.phone_no;
+                    _this.participantEmail = record.email;
+                    _this.participantPhoto = record.profile_picture == '' ? '{% static 'img/no-photo.jpg' %}' : record.profile_picture;
+
+                    _this.hideSignup();
+                    new Modal.alert( response.data.result.msg ).show();
+                })
+                .catch(function (error) {
+                    console.log(error);
+                    new Modal.alert( "Error: " + error.response.data.result.msg ).show();
+                });
+
+
+
+            },
+            showEvent(e){
+                const _this = this;
+
+                const source = e.target;
+                const eventId = source.getAttribute('event-id');
+
+                
+                let token = _this.session_token;
+                if(_this.session_token){
+                    token = "&token=" + token;
+                }
+                
+
+                let url = `{% url 'api:event' 0 %}?${token}`;
+                url = url.replace('/0', `/${eventId}`);
+                console.log(url);
+
+                axios({
+                    method: 'get',
+                    url: url,
+                })
+                .then(function (response) {
+                    console.log("EVENT DATA: ", response);
+                    const event = response.data.records;
+
+                    _this.selEventId = event.id;
+                    _this.selEventName = event.name;
+                    _this.selEventDateTime = event.date_time;
+                    _this.selEventLocation = event.location;
+                    _this.selEventDescription = event.description;
+                    _this.selEventType = event.type;
+                    _this.selEventMax = event.max_participants;
+                    _this.selEventAvailable = event.available;
+                    _this.selEventIsRegistered = event.is_registered;
+                    _this.selEventPhoto = event.event_photo;
+
+                    _this.mdlEvent = new bootstrap.Modal(document.getElementById('mdl-event'));
+                    _this.mdlEvent.show();
+                })
+                .catch(function (error) {
+                    console.log(error);
+                    new Modal.alert( "Error: " + error.response.data.records.msg ).show();
+                })
+                .finally(function () {
+                    //
+                });
+
+
+                
+            },
+            hideEvent(e){
+
+                if(this.mdlEvent){
+                    this.mdlEvent.hide();
+                    this.mdlEvent = null;
+
+                    this.selEventId = 0;
+                    this.selEventName = '';
+                    this.selEventDateTime = '';
+                    this.selEventLocation = '';
+                    this.selEventDescription = '';
+                    this.selEventType = '';
+                    this.selEventMax = 0;
+                    this.selEventAvailable = 0;
+                    this.selEventIsRegistered = false;
+                    this.selEventPhoto = '';
+                }
+            },
+            regEvent(e){
+                const _this = this;
+
+                if(!_this.isLoggedIn){
+                    _this.hideEvent();
+                    _this.showLogin();
+
+                    return;
+                }
+
+
+                let proceed = new Modal({
+                    title: 'Confirmation',
+                    content: 'Are you sure to register to this event?',
+                    headerClose: '',
+                    buttons: [{
+                                "text": "No",
+                                "value": false,
+                                "attr": {
+                                    "class": "btn btn-default",
+                                    "data-dismiss": "modal"
+                                }
+                            },
+                            {
+                                "text": "Yes",
+                                "value": true,
+                                "attr": {
+                                    "class": "btn btn-primary",
+                                    "data-dismiss": "modal"
+                                }
+                            }],
+                });
+
+                console.log(proceed);
+                
+                proceed.show().once('dismiss', function(modal, ev, button) {
+                    if (button && button.value) {
+
+                        let formData = new FormData();
+                        formData.append('token', _this.session_token);
+
+                        let url = `{% url 'api:event' 0 %}?`;
+                        url = url.replace('/0', `/${_this.selEventId}`);
+
+                        axios({
+                            method: 'post',
+                            url: url,
+                            data: formData,
+                            headers: {"Content-Type":"multipart/form-data"},
+                        })
+                        .then(function (response) {
+                            console.log("EVENT DATA: ", response);
+
+                            
+
+                            // const event = response.data.records;
+
+                            /*
+                            _this.eventsData.every((event) => {
+                                console.log(event.id, ' == ', _this.selEventId);
+                                if(event.id == _this.selEventId){
+                                    event.is_registered = true;
+                                    event.available--;
+            
+                                    return false;
+                                }else{
+                                    return true;
+                                }
+                            });
+                            */
+            
+                            _this.hideEvent();
+                            new Modal.alert( "Done! You've successfully register to the event." ).show();
+                        })
+                        .catch(function (error) {
+                            console.log(error.response.data.records);
+                            new Modal.alert( "Error: " + error.response.data.records.msg ).show();
+                        })
+                        .finally(function () {
+                            //
+                        });
+
+                    }
+                });
+                
+            },
+            handlePaginationUpdate(){
+                if(this.perPage < 1) this.perPage = 1;
+                if(this.perPage > 50) this.perPage = 50; // max 50
+
+                const _this = this;
+                
+                clearTimeout(this.delayDataLoading);
+                this.delayDataLoading = setTimeout(() => {
+                    _this.getData();
+                }, 1000);
+
+            },
+            getData(){
+                const _this = this;
+
+                let q = _this.filterText;
+                if(q) q= "q=" + q;
+
+                let from = _this.filterDateFrom;
+                let to = _this.filterDateTo;
+
+                if(from && to) {
+                    from = "&event_from=" + moment(from).format('DD-MM-YYYY');
+                    to = "&event_to=" + moment(to).format('DD-MM-YYYY');
+                }else{
+                    from='';
+                    to='';
+                }
+
+                /*
+                let token = _this.session_token;
+                if(_this.session_token){
+                    token = "&token=" + token;
+                }
+                */
+                
+                let sort = _this.sortBy;
+                if(sort) sort = "&sort=" + sort;
+
+                let url = `{% url 'api:events' %}?${q}${from}${to}${sort}&page=${_this.currentPage}&perpage=${_this.perPage}`;
+                console.log(url);
+
+                axios({
+                    method: 'get',
+                    url: url,
+                })
+                .then(function (response) {
+                    _this.eventsData = response.data.records;
+
+                    _this.currentPage = response.data.record_info.page;
+                    _this.perPage = response.data.record_info.per_page;
+                    _this.totalPage = response.data.record_info.max_page;
+                    _this.totalRecords = response.data.record_info.total_records;
+                })
+                .catch(function (error) {
+                    new Modal.alert( "Server error." ).show();
+                    console.log(error);
+                })
+                .finally(function () {
+                    //
+                });
+            },
+            handlePhotoUpload(e) {
+                const _this = this;
+
+                const file = e.target.files[0]; 
+                const maxSizeInBytes = 2 * 1024 * 1024; // 2MB
+          
+                if (file && file.size > maxSizeInBytes) {
+                  
+                    new Modal.alert( "Error: Photo should not exceeds 2MB." ).show();
+                    
+                    e.target.value = '';
+                    _this.fldParticipantPhoto = '';
+                }else{
+                    _this.fldParticipantPhoto = e.target.files[0];
+                    console.log(_this.fldParticipantPhoto);
+                }
+
+            },
+        },
+        computed: {
+            displayChoosenPhoto() {
+
+                if(this.isAddParticipant){
+                    // For adding new participant
+                    if (this.fldParticipantPhoto) {
+                        return URL.createObjectURL(this.fldParticipantPhoto);
+                    }else{
+                        return "{% static 'img/no-photo.jpg' %}";
+                    }
+                }else{
+                    // For edit profile
+                    if (this.participantPhoto && !this.fldParticipantPhoto ) {
+                        return this.participantPhoto;
+                    }else if (this.fldParticipantPhoto) {
+                        return URL.createObjectURL(this.fldParticipantPhoto);
+                    }else{
+                        return "{% static 'img/no-photo.jpg' %}";
+                    }
+                }
+
+                
+                return null;
+            },
+            makeImageURL(path) {
+
+                if(path){
+                    return URL.createObjectURL(path);
+                }
+
+                
+                return null;
+            },
+            membershipFormTitle(){
+                if(this.isAddParticipant){
+                    return "Membership Form";
+                }else{
+                    return "Edit Profile";
+                }
+            }
+        },
+        mounted() {
+
+            this.session_token = getCookie('session_token');
+
+            console.log("STORED SESSION: ", this.session_token);
+
+            if(this.session_token){
+                this.doLogin(this.session_token);
+            } else {
+                this.getData();
+            }
+
+        },
+    });
+
+    const mountedApp = app.mount('#app');
+
+</script>
+{% endblock  %}

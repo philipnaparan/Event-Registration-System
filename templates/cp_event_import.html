@@ -1,0 +1,73 @@
+{% extends '_cpbase.html' %}
+{% load static %}
+
+{% block header_content  %}
+<h1 class="display-2"><i class="fa-solid fa-screwdriver-wrench"></i> Control Panel</1>
+{% endblock  %}
+
+
+
+{% block main_content  %}
+
+<div class="row">
+
+    <div class="col col-md-2 col-sm-12">
+
+        {% include "partials/_cp_nav.html" %}
+    
+    </div>
+    
+
+
+    <div class="col col-md-10 col-sm-12">
+
+        <div class="row">
+            
+            <h2>Event Importer</h2>
+
+            <div class="col col-6 mb-4">
+
+                {% if success == 0 and msg != '' %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ msg }}
+                    </div>
+                {% endif %}
+
+                <form method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="ts" value="{{ ts }}">
+                    {% csrf_token %}
+
+
+                    <div class="mb-3">
+                        
+                        <p><strong>Step 1.</strong><br />Click link bellow to download sample data to upload.<br />
+                            <a href="{% static 'downloads/sample.zip' %}" target="_blank"><i class="fa-solid fa-file-zipper"></i> Sample.zip</a>
+                        </p>
+                        
+                    </div>
+                    
+                    
+                    <div class="mb-3">
+
+                        <p><strong>Step 2.</strong><br />Fill-up the required events data and upload it.</p>
+                        
+                        <label for="fupload" class="form-label">Upload File</label>
+                        <input id="fupload" class="form-control" name="event-files" type="file" accept=".zip">
+
+                    </div>
+
+                    
+                    <button type="button" onclick="history.back();" class="btn btn-secondary"><i class="fa fa-arrow-left" aria-hidden="true"></i> Back</button>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-upload"></i> Upload</button>
+                </form>
+
+            </div>
+
+            <div class="col col-6"></div>
+
+    </div>
+
+</div>
+
+
+{% endblock  %}

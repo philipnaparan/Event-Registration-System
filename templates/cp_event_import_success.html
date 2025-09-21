@@ -1,0 +1,49 @@
+{% extends '_cpbase.html' %}
+{% load static %}
+
+{% block header_content  %}
+<h1 class="display-2"><i class="fa-solid fa-screwdriver-wrench"></i> Control Panel</1>
+{% endblock  %}
+
+
+
+{% block main_content  %}
+
+<div class="row">
+
+    <div class="col col-md-2 col-sm-12">
+
+        {% include "partials/_cp_nav.html" %}
+    
+    </div>
+    
+
+
+    <div class="col col-md-10 col-sm-12">
+
+        <div class="row">
+            
+            <h2>Event Importer</h2>
+
+            <div class="col col-6 mb-4">
+
+                {% if success == 1 and msg != '' %}
+                    <div class="alert alert-success" role="alert">
+                        <h2><i class="fa fa-check-circle-o" aria-hidden="true"></i> {{ msg }}</h2>
+                    </div>
+                {% endif %}
+
+                
+                <a href="{% url 'cpanel:events' %}" class="btn btn-primary"><i class="fa fa-list" aria-hidden="true"></i> Check Event List</a>
+
+
+            </div>
+
+            <div class="col col-6"></div>
+
+    </div>
+
+</div>
+
+
+{% endblock  %}

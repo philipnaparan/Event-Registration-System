@@ -1,0 +1,46 @@
+{% extends '_cpbase.html' %}
+
+
+{% block header_content  %}
+<h1 class="display-2"><i class="fa-solid fa-screwdriver-wrench"></i> Control Panel</1>
+{% endblock  %}
+
+
+
+{% block main_content  %}
+
+<div class="row">
+
+    <div class="col col-md-2 col-sm-12">
+
+        {% include "partials/_cp_nav.html" %}
+    
+    </div>
+    
+
+
+    <div class="col col-md-10 col-sm-12">
+
+        <div class="row">
+            
+            <div class="col col-4">
+                <h2>Delete Event Type</h2>
+
+                <p>Are you sure you want to delete "{{ type.name }}"?</p>
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="button" onclick="history.back();" class="btn btn-secondary"><i class="fa fa-arrow-left" aria-hidden="true"></i> Back</button>
+                    <button type="submit" class="btn btn-danger"><i class="fa fa-trash" aria-hidden="true"></i> Delete</button>
+                </form>
+
+            </div>
+
+            <div class="col col-8">
+            </div>
+
+    </div>
+
+</div>
+
+
+{% endblock  %}

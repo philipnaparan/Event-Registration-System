@@ -1,0 +1,66 @@
+{% extends '_cpbase.html' %}
+
+
+{% block header_content  %}
+<h1 class="display-2"><i class="fa-solid fa-screwdriver-wrench"></i> Control Panel</1>
+{% endblock  %}
+
+
+
+{% block main_content  %}
+
+<div class="row">
+
+    <div class="col col-md-2 col-sm-12">
+
+        {% include "partials/_cp_nav.html" %}
+    
+    </div>
+    
+
+
+    <div class="col col-md-10 col-sm-12">
+
+        <div class="row">
+            
+            <div class="col col-12">
+
+                <h2>Event List</h2>
+
+                <div class="row">
+                    <div class="col col-12 text-end mb-4">
+                        <a class="btn btn-primary" href="{% url 'cpanel:event_add' %}"><i class="fa fa-plus" aria-hidden="true"></i> Add Event</a> 
+                        <a class="btn btn-secondary" href="{% url 'cpanel:event_import' %}"><i class="fa-solid fa-upload"></i> Import Events</a>
+                    </div>
+                </div>
+                
+                <table class="table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Event Name</th>
+                        <th scope="col">Date</th>
+                        <th scope="col">location</th>
+                        <th scope="col">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                        {% for event in events %}
+                        <tr>
+                            <td class="w-50">{{ event.name }}</td>
+                            <td>{{ event.date_time }}</td>
+                            <td>{{ event.location }}</td>
+                            <td class="w-5"><a class="btn btn-light" href="{% url 'cpanel:event_edit' event.id %}" title="Edit"><i class="fa fa-edit" aria-hidden="true"></i></a> <a class="btn btn-light" href="{% url 'cpanel:event_delete' event.id %}" title="Delete"><i class="fa fa-trash" aria-hidden="true"></i></a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                  </table>
+
+                
+            </div>
+
+    </div>
+
+</div>
+
+
+{% endblock  %}

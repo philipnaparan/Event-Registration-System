@@ -1,0 +1,59 @@
+{% extends '_cpbase.html' %}
+
+
+
+{% block main_content  %}
+
+<div class="row">
+
+    <div class="col col-4"></div>
+    <div class="col col-4">
+        <div class="card">
+            <div class="card-header fw-bold">
+                <i class="fa-solid fa-screwdriver-wrench"></i> Control Panel Login
+            </div>
+            <div class="card-body">
+                {% if messages %}
+                    {% for message in messages %}
+                        {% if message.tags == 'warning' %}
+                            <div class="alert alert-danger" role="alert">
+                                {{ message }}
+                            </div>
+                        {% endif %}
+                        {% if message.tags == 'success' %}
+                            <div class="alert alert-success" role="alert">
+                                {{ message }}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="{{ form.username.id_for_label }}" class="form-label">{{ form.username.label }}</label>
+                        {{ form.username }}
+                        <div class="text-danger w-100 d-block">
+                            {{ form.username.errors }}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.password.id_for_label }}" class="form-label">{{ form.password.label }}</label>
+                        {{ form.password }}
+                        <div class="text-danger w-100 d-block">
+                            {{ form.password.errors }}
+                        </div>
+                    </div>
+            
+                    <div class="">
+                        <button type="submit" class="btn btn-primary">Login</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col col-4"></div>
+
+</div>
+
+{% endblock  %}

@@ -1,0 +1,14 @@
+<div class="card">
+    <div class="card-header fw-bold">
+        <i class="fa-solid fa-bars"></i> CPanel Navigation
+    </div>
+    <div class="card-body list-group p-0">
+        <a class="list-group-item" href="{% url 'cpanel:home' %}"><i class="fa fa-home" aria-hidden="true"></i> Home</a>
+        <a class="list-group-item" href="{% url 'cpanel:events' %}"><i class="fa-regular fa-rss"></i> Events</a>
+        <a class="list-group-item" href="{% url 'cpanel:event_types' %}"><i class="fa-regular fa-rectangle-list"></i> Event Type</a>
+        <a class="list-group-item" href="{% url 'home' %}admin/" target="_blank"><i class="fa-solid fa-table-columns"></i> Django Admin</a>
+        <a class="list-group-item" href="{% url 'cpanel:logout' %}"><i class="fa fa-sign-out" aria-hidden="true"></i> Logout</a>
+    </div>
+</div>
+
+ 

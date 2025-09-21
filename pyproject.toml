@@ -1,0 +1,16 @@
+[project]
+name = "schoolevent"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "asgiref==3.7.2",
+    "django==4.2.5",
+    "django-cleanup==8.0.0",
+    "djangorestframework==3.14.0",
+    "pillow==11.3.0",
+    "pytz==2023.3.post1",
+    "sqlparse==0.4.4",
+    "tzdata==2023.3",
+]

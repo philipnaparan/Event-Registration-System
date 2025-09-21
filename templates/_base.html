@@ -1,0 +1,59 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>{{ page_title }}</title>
+    
+    <link rel="stylesheet" href="{% static 'vendors/' %}bootstrap/css/bootstrap.css">
+    <link href="{% static 'vendors/' %}fontawesome/css/fontawesome.css" rel="stylesheet">
+    <link href="{% static 'vendors/' %}fontawesome/css/brands.css" rel="stylesheet">
+    <link href="{% static 'vendors/' %}fontawesome/css/solid.css" rel="stylesheet">
+
+    {% block top_script  %}
+    {% endblock  %}
+
+    <style>
+      body{
+        margin: 0px;
+        padding: 0px;
+        background-color: #000000;
+        background-image: url('media/bg.jpg');
+        background-size: cover;
+        background-position: center;
+        
+      }
+      #main-page{
+        padding-left: 30px;
+        background-color: #ffffff;
+        background-color: rgba(255, 255, 255, 0.8);
+        border: 1px solid #cccccc;
+        box-shadow: 5px 5px 20px rgba(0, 0, 0, 0.3);
+      }
+
+    </style>
+  </hea>
+  <body>
+    <div id="main-page" class="container rounded pt-4 mt-4">
+      <header class="text-center mt-4 mb-4">
+          {% block header_content  %}
+          {% endblock  %}
+      </header>
+      <section>
+      <div id="app" class="row">
+      {% block main_content  %}
+      {% endblock  %}
+      </div>
+      </section>
+      <footer class="text-center mt-4">
+        {% block footer_content  %}
+        {% endblock  %}
+      </footer>
+    </div>
+
+    {% block bottom_script  %}
+    {% endblock  %}
+ </body>
+</html>

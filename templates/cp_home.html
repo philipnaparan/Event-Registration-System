@@ -1,0 +1,40 @@
+{% extends '_cpbase.html' %}
+
+
+{% block header_content  %}
+<h1 class="display-2"><i class="fa-solid fa-screwdriver-wrench"></i> Control Panel</1>
+{% endblock  %}
+
+
+
+{% block main_content  %}
+
+<div class="row">
+
+    <div class="col col-md-2 col-sm-12">
+
+        {% include "partials/_cp_nav.html" %}
+    
+    </div>
+    
+
+
+    <div class="col col-md-10 col-sm-12">
+
+        <div class="row">
+            
+            <div class="col col-12">
+                <h2>Home</h2>
+                <p>
+                    Back office admin panel for Event Registration System. This is for educational purpose only.<br /><br />
+                    Developed By: Philip V. Naparan.<br />
+                    Webssite: <a href="https://www.philipcode.com" target="_blank">www.philipcode.com</a><br />
+                </p>
+            </div>
+
+    </div>
+
+</div>
+
+
+{% endblock  %}
