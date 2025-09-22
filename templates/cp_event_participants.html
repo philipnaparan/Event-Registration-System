@@ -1,0 +1,76 @@
+{% extends '_cpbase.html' %}
+{% load static %}
+
+{% block header_content  %}
+<h1 class="display-2"><i class="fa-solid fa-screwdriver-wrench"></i> Control Panel</1>
+{% endblock  %}
+
+
+
+{% block main_content  %}
+
+<div class="row">
+
+    <div class="col col-md-2 col-sm-12">
+
+        {% include "partials/_cp_nav.html" %}
+    
+    </div>
+    
+
+
+    <div class="col col-md-10 col-sm-12">
+
+        <div class="row">
+            
+            <div class="col col-12">
+                <h2>Event Participants</h2>
+                <strong>Event Name: {{ event.name }}</strong><br />
+                <span>Description: {{ event.description }}</span><br />
+                <span>Location: {{ event.location }}</span><br />
+                <span>Capacity: {{ event.max_participants }}</span><br />
+            </div>
+
+        </div>
+
+        <div class="row mt-4">
+            <div class="col col-12">
+                
+                <table class="table">
+                    <thead>
+                      <tr>
+                        <th scope="col">First Name</th>
+                        <th scope="col">Last Name</th>
+                        <th scope="col">E-mail</th>
+                        <th scope="col">Phone No.</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in participants %}
+                        <tr>
+                            <td class="w-50">{{ p.first_name }}</td>
+                            <td>{{ p.last_name }}</td>
+                            <td>{{ p.phone_no }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                  </table>
+
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col col-12">
+                <button type="button" onclick="history.back();" class="btn btn-secondary"><i class="fa fa-arrow-left" aria-hidden="true"></i> Back</button>
+            </div>
+        </div>
+
+        </div>
+
+
+    </div>
+
+</div>
+
+
+{% endblock  %}

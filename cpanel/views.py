@@ -26,7 +26,7 @@ import shutil
 @login_required(login_url='cpanel:login')
 def home(request):
     context = dict()
-    context['page_title'] = "Homex"
+    context['page_title'] = "Home"
     context['data'] = "Halo halo " + datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     return render(request, 'cp_home.html', context)
 
@@ -229,6 +229,16 @@ class EventDeleteView(LoginRequiredMixin, View):
         return redirect('cpanel:events')
     
 
+
+class EventParticipantsView(LoginRequiredMixin, View):
+    login_url = 'cpanel:login'
+
+    def get(self, request, id):
+        event = get_object_or_404(Event, id=id)
+        participants = event.participant_set.all()
+        print(participants)
+        return render(request, 'cp_event_participants.html', {'event': event, 'participants' : participants})
+    
 
 
 

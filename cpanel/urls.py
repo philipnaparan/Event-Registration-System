@@ -15,6 +15,7 @@ urlpatterns = [
     path('events/', v.EventListView.as_view(), name='events'),
     path('events/import/', v.EventImportView.as_view(), name='event_import'),
     path('events/add/', v.EventAddView.as_view(), name='event_add'),
+    path('events/participants/<int:id>/', v.EventParticipantsView.as_view(), name='event_participants'),
     path('events/edit/<int:id>/', v.EventEditView.as_view(), name='event_edit'),
     path('events/delete/<int:id>/', v.EventDeleteView.as_view(), name='event_delete'),
 
@@ -24,3 +25,5 @@ urlpatterns = [
     path('event_types/edit/<int:id>/', v.EventTypeEditView.as_view(), name='event_type_edit'),
     path('event_types/delete/<int:id>/', v.EventTypeDeleteView.as_view(), name='event_type_delete'),
 ]
+
+
